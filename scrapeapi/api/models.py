@@ -13,3 +13,11 @@ class Scraper(models.Model):
     output_json = models.TextField(blank=True)
     exec_datetime = models.DateTimeField()
     headers = models.TextField(blank=True)
+
+class Element(models.Model):
+    scraper = models.ForeignKey(Scraper, on_delete=models.CASCADE)
+    title = models.CharField(max_length=20)
+    xpath = models.TextField()
+    regex_sub = models.TextField(blank=True)
+    regex_search = models.TextField(blank=True)
+    concat_result = models.CharField(max_length=10, blank=True)
