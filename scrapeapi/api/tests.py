@@ -157,3 +157,162 @@ class ProjectTests(APITestCase):
         url_detail = reverse('project-detail', kwargs={'pk':projects[1]})
         response = self.client.delete(url_detail, headers=self.headers[0])
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+class ScraperTests(APITestCase):
+
+    def setUp(self):
+        """
+        1. Creating 2 users for testing. Storing tokens into self.headers list.
+        2. Creating 2 projects. One project per user.
+        """
+        url = reverse('user-list')
+
+        self.headers = []
+        for i in range(2):
+            data = {
+                'username': f'test_user_{i}',
+                'password': f'test_pass_{i}'
+                }
+            self.client.post(url, data)
+            url_auth = reverse('auth')
+            response = self.client.post(url_auth, data)
+            self.user_token = response.data['token']
+            self.headers.append({
+                'Authorization': f'Token {self.user_token}'
+            })
+
+        url_list = reverse('project-list')
+        self.projects = []
+        for i in range(2): # Two users
+            for k in range(1): # One project per user
+                data = {'title': f'testproject of user #{i}'}
+                response = self.client.post(url_list, data, headers=self.headers[i])
+                self.projects.append(response.data['id'])
+
+    def test_create_scraper(self):
+        """
+        Testing the creation of a new scraper object.
+        """
+        url = reverse('scraper-list')
+
+        # Params: empty
+        data = {}
+        response = self.client.post(url, data, headers=self.headers[0])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # Params: only title
+        data = {'title': 'test_scraper'}
+        response = self.client.post(url, data, headers=self.headers[0])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # Params: only project
+        data = {'project': self.projects[0]}
+        response = self.client.post(url, data, headers=self.headers[0])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        
+        # Testing creating a scraper for a current user
+        data = {
+            'title': 'test_scraper',
+            'project': self.projects[0]
+            }
+        response = self.client.post(url, data, headers=self.headers[0])
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # Testing creating a scraper for another user
+        data = {
+            'title': 'test_scraper',
+            'project': self.projects[1]
+            }
+        response = self.client.post(url, data, headers=self.headers[0])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_get_scrapers(self):
+        """
+        Testing getting a scraper and a list of scrapers for a current and another user.
+        """
+        url_list = reverse('scraper-list')
+
+        # Creating scrapers for 2 users, 2 scrapers per user
+        for i in range(2): # Two users
+            for k in range(2): # Two scrapers per user
+                data = {
+                    'title': f'test_scraper #{k}, user {i}, project {i}',
+                    'project': self.projects[i]
+                    }
+                response = self.client.post(url_list, data, headers=self.headers[i])
+
+        # Testing of the amount of the first user scrapers
+        response = self.client.get(url_list, headers=self.headers[0])
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        scraper_id = response.data[0]['id']
+
+        url_detail = reverse('scraper-detail', kwargs={'pk':scraper_id})
+        
+        # Testing getting a scraper of a current user
+        response = self.client.get(url_detail, headers=self.headers[0])
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Testing getting a scraper with another user
+        response = self.client.get(url_detail, headers=self.headers[1])
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_scraper(self):
+        """
+        Testing updating a scraper for a current and another user.
+        """
+        url_list = reverse('scraper-list')
+        
+        # Creating scrapers for 2 users, 2 scrapers per user
+        scrapers = []
+        for i in range(2): # Two users
+            for k in range(2): # Two scrapers per user
+                data = {
+                    'title': f'test_scraper #{k}, user {i}, project {i}',
+                    'project': self.projects[i]
+                    }
+                response = self.client.post(url_list, data, headers=self.headers[i])
+                scrapers.append(response.data['id'])
+
+        # Preparing data for update
+        data = {
+            'title': 'updated title'
+        }
+
+        # Testing updating a scraper of a current user
+        url_detail = reverse('scraper-detail', kwargs={'pk':scrapers[0]})
+        response = self.client.patch(url_detail, data=data, headers=self.headers[0])
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['title'], data['title'])
+
+        # Testing updating a scraper of another user
+        url_detail = reverse('project-detail', kwargs={'pk':scrapers[2]})
+        response = self.client.patch(url_detail, data=data, headers=self.headers[0])
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_scraper(self):
+        """
+        Testing the removal a scraper for a current and another user.
+        """
+        url_list = reverse('scraper-list')
+
+        # Creating scrapers for 2 users, 2 scrapers per user
+        scrapers = []
+        for i in range(2): # Two users
+            for k in range(2): # Two scrapers per user
+                data = {
+                    'title': f'test_scraper #{k}, user {i}, project {i}',
+                    'project': self.projects[i]
+                    }
+                response = self.client.post(url_list, data, headers=self.headers[i])
+                scrapers.append(response.data['id'])
+
+        # Testing the removal a scraper of a current user
+        url_detail = reverse('scraper-detail', kwargs={'pk':scrapers[0]})
+        response = self.client.delete(url_detail, headers=self.headers[0])
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        # Testing the removal a scraper of another user
+        url_detail = reverse('scraper-detail', kwargs={'pk':scrapers[2]})
+        response = self.client.delete(url_detail, headers=self.headers[0])
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

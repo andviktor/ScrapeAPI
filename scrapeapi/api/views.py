@@ -1,4 +1,5 @@
 from django.db.models import Exists
+from django.http.request import QueryDict
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
@@ -29,6 +30,16 @@ class ScraperViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(project=self.request.data['project'])
         return queryset
 
+    def create(self, request, *args, **kwargs):
+        if request.data.get('project'):
+            project = Project.objects.get(pk=request.data.get('project'))
+            if project:
+                if project.user == request.user:
+                    return super().create(request, *args, **kwargs)
+        response = {'scraper': 'Incorrect parameters passed.'}
+        return Response(response, status=status.HTTP_400_BAD_REQUEST)
+                
+
 class ElementViewSet(viewsets.ModelViewSet):
     authentication_classes = (TokenAuthentication, )
     serializer_class = ElementSerializer
@@ -45,7 +56,7 @@ class ElementViewSet(viewsets.ModelViewSet):
         if project.user == request.user:
             return super().create(request, *args, **kwargs)
         else:
-            response = {'message': 'Scraper not valid.'}
+            response = {'scraper': 'Scraper not found.'}
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
 class UserViewSet(viewsets.ModelViewSet):
