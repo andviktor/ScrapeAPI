@@ -1,13 +1,14 @@
 from django.urls import path, include
 from rest_framework import routers
-from .views import UserViewSet, ProjectViewSet, ScraperViewSet, ElementViewSet
+from . import views
 
 router = routers.DefaultRouter()
-router.register(r'users', UserViewSet, basename='user')
-router.register(r'projects', ProjectViewSet, basename='project')
-router.register(r'scrapers', ScraperViewSet, basename='scraper')
-router.register(r'elements', ElementViewSet, basename='element')
+router.register(r'users', views.UserViewSet, basename='user')
+router.register(r'projects', views.ProjectViewSet, basename='project')
+router.register(r'scrapers', views.ScraperViewSet, basename='scraper')
+router.register(r'elements', views.ElementViewSet, basename='element')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('r/<int:scraper_id>/', views.ScraperResult.as_view())
 ]

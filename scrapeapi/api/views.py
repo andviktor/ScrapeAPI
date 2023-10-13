@@ -1,6 +1,5 @@
-from django.db.models import Exists
-from django.http.request import QueryDict
 from rest_framework import viewsets, status
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import AllowAny
@@ -39,7 +38,6 @@ class ScraperViewSet(viewsets.ModelViewSet):
         response = {'scraper': 'Incorrect parameters passed.'}
         return Response(response, status=status.HTTP_400_BAD_REQUEST)
                 
-
 class ElementViewSet(viewsets.ModelViewSet):
     authentication_classes = (TokenAuthentication, )
     serializer_class = ElementSerializer
@@ -64,3 +62,17 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     http_method_names = ['post']
+
+class ScraperResult(APIView):
+    authentication_classes = [TokenAuthentication]
+
+    def get(self, request, scraper_id):
+        scraper = Scraper.objects.get(pk=scraper_id)
+        if scraper.project.user == request.user:
+            response = scraper.output_json
+            return Response(response, status=status.HTTP_200_OK)
+        else:
+            response = {
+                'message': 'Scraper not found.'
+            }
+            return Response(response, status=status.HTTP_404_NOT_FOUND)
