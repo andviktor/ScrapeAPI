@@ -51,13 +51,13 @@ class ElementViewSet(viewsets.ModelViewSet):
         return queryset
 
     def create(self, request, *args, **kwargs):
-        scraper = Scraper.objects.get(pk=request.data.get('scraper'))
-        project = Project.objects.get(pk=scraper.project.id)
-        if project.user == request.user:
-            return super().create(request, *args, **kwargs)
-        else:
-            response = {'scraper': 'Scraper not found.'}
-            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+        if request.data.get('scraper'):
+            scraper = Scraper.objects.get(pk=request.data.get('scraper'))
+            if scraper.project:
+                if scraper.project.user == request.user:
+                    return super().create(request, *args, **kwargs)
+        response = {'element': 'Incorrect parameters passed.'}
+        return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
 class UserViewSet(viewsets.ModelViewSet):
     permission_classes = (AllowAny,)

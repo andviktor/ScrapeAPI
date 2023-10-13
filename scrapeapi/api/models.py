@@ -22,7 +22,7 @@ class Scraper(models.Model):
 
 class Element(models.Model):
     scraper = models.ForeignKey(Scraper, on_delete=models.CASCADE)
-    title = models.CharField(max_length=20)
+    title = models.CharField(max_length=100)
     xpath = models.TextField()
     regex_sub = models.TextField(blank=True)
     regex_search = models.TextField(blank=True)
