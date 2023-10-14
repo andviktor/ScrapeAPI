@@ -24,7 +24,7 @@ class ScraperViewSet(viewsets.ModelViewSet):
     serializer_class = ScraperSerializer
 
     def get_queryset(self):
-        queryset = Scraper.objects.filter(project__in=Project.objects.filter(user=self.request.user))
+        queryset = Scraper.objects.filter(project__user=self.request.user)
         if 'project' in self.request.data:
             queryset = queryset.filter(project=self.request.data['project'])
         return queryset
@@ -43,7 +43,7 @@ class ElementViewSet(viewsets.ModelViewSet):
     serializer_class = ElementSerializer
     
     def get_queryset(self):
-        queryset = Element.objects.filter(scraper__in=Scraper.objects.filter(project__in=Project.objects.filter(user=self.request.user)))
+        queryset = Element.objects.filter(scraper__project__user = self.request.user)
         if 'scraper' in self.request.data:
             queryset = queryset.filter(scraper=self.request.data['scraper'])
         return queryset
