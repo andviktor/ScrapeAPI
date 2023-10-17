@@ -55,7 +55,7 @@ MIDDLEWARE = [
 ]
 
 CORS_ORIGIN_WHITELIST = [
-    'http://localhost:8085'
+    'http://localhost:5173'
 ]
 
 ROOT_URLCONF = 'scrapeapi.urls'
