@@ -13,9 +13,11 @@ class Scraper(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     title = models.CharField(max_length=100)
     description = models.TextField(max_length=300, blank=True)
-    output_json = models.JSONField(null=True)
+    output_json = models.JSONField(null=True, blank=True)
     exec_datetime = models.DateTimeField(null=True, blank=True)
     headers = models.TextField(blank=True)
+    source_urls = models.TextField(blank=True)
+    source_json_url_field = models.CharField(max_length=100, blank=True)
 
     def __str__(self) -> str:
         return self.title

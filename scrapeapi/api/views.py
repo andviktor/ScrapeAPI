@@ -25,8 +25,6 @@ class ScraperViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Scraper.objects.filter(project__user=self.request.user)
-        if 'project' in self.request.data:
-            queryset = queryset.filter(project=self.request.data['project'])
         return queryset
 
     def create(self, request, *args, **kwargs):
