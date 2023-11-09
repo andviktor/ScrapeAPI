@@ -74,3 +74,17 @@ class ScraperResult(APIView):
                 'message': 'Scraper not found.'
             }
             return Response(response, status=status.HTTP_404_NOT_FOUND)
+        
+class ScraperRun(APIView):
+    authentication_classes = [TokenAuthentication]
+
+    def post(self, request, scraper_id):
+        scraper = Scraper.objects.get(pk=scraper_id)
+        if scraper.project.user == request.user:
+            response = {'message': 'OK'}
+            return Response(response, status=status.HTTP_200_OK)
+        else:
+            response = {
+                'message': 'Scraper not found.'
+            }
+            return Response(response, status=status.HTTP_404_NOT_FOUND)
