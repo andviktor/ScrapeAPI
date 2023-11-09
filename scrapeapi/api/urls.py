@@ -10,5 +10,5 @@ router.register(r'elements', views.ElementViewSet, basename='element')
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('result/<int:scraper_id>/', views.ScraperResult.as_view())
+    path('scrapers/<int:scraper_id>/json/', views.ScraperResult.as_view())
 ]
