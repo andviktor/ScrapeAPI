@@ -5,6 +5,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import AllowAny
 from .models import User, Project, Scraper, Element
 from .serializers import UserSerializer, ProjectSerializer, ScraperSerializer, ElementSerializer
+from .utils.scraper_engine import ScraperEngine
 
 class ProjectViewSet(viewsets.ModelViewSet):
     authentication_classes = (TokenAuthentication, )
@@ -81,7 +82,27 @@ class ScraperRun(APIView):
     def post(self, request, scraper_id):
         scraper = Scraper.objects.get(pk=scraper_id)
         if scraper.project.user == request.user:
-            response = {'message': 'OK'}
+
+            headers = {
+                "user-agent": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+                }
+
+            elements_objects = Element.objects.filter(scraper_id=scraper.id)
+            elements_list = []
+            for element in elements_objects:
+                element_dict = {
+                    'name': element.title,
+                    'xpath': element.xpath,
+                    'regex_sub_pattern': element.regex_sub_pattern,
+                    'regex_sub_repl': element.regex_sub_repl,
+                    'regex_search': element.regex_search,
+                    'concat_results': element.concat_result,
+                }
+                elements_list.append(element_dict)
+            engine = ScraperEngine(scraper.source_urls.split('\n'), headers, elements_list)
+            scraper.output_json = engine.scrape()
+            scraper.save()
+            response = scraper.output_json
             return Response(response, status=status.HTTP_200_OK)
         else:
             response = {

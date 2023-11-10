@@ -15,7 +15,12 @@ class ScraperSerializer(serializers.ModelSerializer):
 class ElementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Element
-        fields = ('id', 'scraper', 'title', 'xpath', 'regex_sub', 'regex_search', 'concat_result')
+        fields = ('id', 'scraper', 'title', 'xpath', 'regex_sub_pattern', 'regex_sub_repl', 'regex_search', 'concat_result')
+        extra_kwargs = {
+            "regex_sub_pattern": {"trim_whitespace": False},
+            "regex_sub_repl": {"trim_whitespace": False},
+            "concat_result": {"trim_whitespace": False},
+            }
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
