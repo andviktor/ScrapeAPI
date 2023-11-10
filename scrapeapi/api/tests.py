@@ -1,8 +1,28 @@
 from django.test import TestCase
 from django.urls import reverse
+from rest_framework.authtoken.models import Token
 from rest_framework import status
 from rest_framework.test import APITestCase
 from .models import User, Project, Scraper, Element
+
+class CommonSetUp:
+
+    def __init__(self) -> None:
+        self.users = []
+        self.headers = []
+
+    def create_users(self, count: int=1) -> None:
+        
+        for i in range(count):
+            user = User.objects.create(
+                username=f'testuser{i}',
+                password=f'testpassword'
+            )
+            token = Token.objects.create(user=user)
+            self.users.append(user)
+            self.headers.append({
+                'Authorization': f'Token {token}'
+            })
 
 class UserTests(APITestCase):
 
@@ -10,54 +30,42 @@ class UserTests(APITestCase):
         """
         Testing the creation of a new user object.
         """
-        url = reverse('user-list')
+        url = reverse('rest_register')
 
         # Params: empty
         data = {}
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        # Params: username
-        data = {'username': 'testuser'}
-        response = self.client.post(url, data)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-        # Params: username, password
+        # Params: username, password1, password2
         data = {
             'username': 'testuser',
-            'password': 'testpass'
+            'password1': 'tu123456789',
+            'password2': 'tu123456789',
             }
         response = self.client.post(url, data)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
         # Get token
-        url_auth = reverse('auth')
+        data = {
+            'username': 'testuser',
+            'password': 'tu123456789'
+            }
+        url_auth = reverse('rest_login')
         response = self.client.post(url_auth, data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        user_token = response.data['token']
 
 class ProjectTests(APITestCase):
 
     def setUp(self):
         """
         Creating 2 users for testing.
-        Storing tokens into self.headers list.
+        Storing headers with tokens into self.headers list.
         """
-        url = reverse('user-list')
 
-        self.headers = []
-        for i in range(2):
-            data = {
-                'username': f'test_user_{i}',
-                'password': f'test_pass_{i}'
-                }
-            self.client.post(url, data)
-            url_auth = reverse('auth')
-            response = self.client.post(url_auth, data)
-            self.user_token = response.data['token']
-            self.headers.append({
-                'Authorization': f'Token {self.user_token}'
-            })
+        self.common_setup = CommonSetUp()
+        self.common_setup.create_users(2)
+        self.headers = self.common_setup.headers
 
     def test_create_project(self):
         """
@@ -162,24 +170,13 @@ class ScraperTests(APITestCase):
 
     def setUp(self):
         """
-        1. Creating 2 users for testing. Storing tokens into self.headers list.
+        1. Creating 2 users for testing. Storing headers with tokens into self.headers list.
         2. Creating 2 projects. One project per user.
         """
-        url = reverse('user-list')
 
-        self.headers = []
-        for i in range(2):
-            data = {
-                'username': f'test_user_{i}',
-                'password': f'test_pass_{i}'
-                }
-            self.client.post(url, data)
-            url_auth = reverse('auth')
-            response = self.client.post(url_auth, data)
-            self.user_token = response.data['token']
-            self.headers.append({
-                'Authorization': f'Token {self.user_token}'
-            })
+        self.common_setup = CommonSetUp()
+        self.common_setup.create_users(2)
+        self.headers = self.common_setup.headers
 
         url_list = reverse('project-list')
         self.projects = []
@@ -321,25 +318,13 @@ class ElementTests(APITestCase):
 
     def setUp(self):
         """
-        1. Creating 2 users for testing. Storing tokens into self.headers list.
+        1. Creating 2 users for testing. Storing headers with tokens into self.headers list.
         2. Creating 2 projects. One project per user.
         3. Creating 4 scrapers. Two scrapes per project.
         """
-        url = reverse('user-list')
-
-        self.headers = []
-        for i in range(2):
-            data = {
-                'username': f'test_user_{i}',
-                'password': f'test_pass_{i}'
-                }
-            self.client.post(url, data)
-            url_auth = reverse('auth')
-            response = self.client.post(url_auth, data)
-            self.user_token = response.data['token']
-            self.headers.append({
-                'Authorization': f'Token {self.user_token}'
-            })
+        self.common_setup = CommonSetUp()
+        self.common_setup.create_users(2)
+        self.headers = self.common_setup.headers
 
         url_list = reverse('project-list')
         self.projects = []
