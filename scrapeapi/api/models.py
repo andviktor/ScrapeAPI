@@ -18,6 +18,7 @@ class Scraper(models.Model):
     headers = models.TextField(blank=True)
     source_urls = models.TextField(blank=True)
     source_json_url_field = models.CharField(max_length=100, blank=True)
+    in_favorites = models.BooleanField()
 
     def __str__(self) -> str:
         return self.title
