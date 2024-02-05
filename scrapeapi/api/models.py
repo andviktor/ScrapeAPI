@@ -17,7 +17,8 @@ class Scraper(models.Model):
     exec_datetime = models.DateTimeField(null=True, blank=True)
     headers = models.TextField(blank=True)
     source_urls = models.TextField(blank=True)
-    source_json_url_field = models.CharField(max_length=100, blank=True)
+    source_scraper = models.ForeignKey('self', on_delete=models.PROTECT, null=True, blank=True)
+    source_scraper_urls_element = models.CharField(max_length=100, null=True, blank=True)
     in_favorites = models.BooleanField(default=False)
 
     def __str__(self) -> str:

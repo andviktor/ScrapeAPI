@@ -10,7 +10,7 @@ class ProjectSerializer(serializers.ModelSerializer):
 class ScraperSerializer(serializers.ModelSerializer):
     class Meta:
         model = Scraper
-        fields = ('id', 'project', 'title', 'description', 'source_urls', 'source_json_url_field', 'output_json', 'exec_datetime', 'headers', 'in_favorites')
+        fields = ('id', 'project', 'title', 'description', 'source_urls', 'source_scraper', 'source_scraper_urls_element', 'output_json', 'exec_datetime', 'headers', 'in_favorites')
 
 class ElementSerializer(serializers.ModelSerializer):
     class Meta:

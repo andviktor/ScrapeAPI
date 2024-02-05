@@ -1,3 +1,4 @@
+import json
 from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -99,7 +100,14 @@ class ScraperRun(APIView):
                     'concat_results': element.concat_result,
                 }
                 elements_list.append(element_dict)
-            engine = ScraperEngine(scraper.source_urls.split('\n'), headers, elements_list)
+            source_urls = []
+            if scraper.source_scraper:
+                source_scraper_output_json_dict = scraper.source_scraper.output_json
+                for value in source_scraper_output_json_dict.values():
+                    source_urls.extend(value[scraper.source_scraper_urls_element])
+            else:
+                source_urls = scraper.source_urls.split('\n')
+            engine = ScraperEngine(source_urls, headers, elements_list)
             scraper.output_json = engine.scrape()
             scraper.save()
             response = scraper.output_json
